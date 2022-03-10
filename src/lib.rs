@@ -10,7 +10,7 @@ struct Wrapper<T: Send>(*mut T);
 
 unsafe impl<T: Send> Send for Wrapper<T> {}
 
-pub fn buffer<U, D, B>(bufs: &mut [B], mut update: U, draw: D) -> !
+pub fn buffer<U, D, B>(bufs: &mut [B], mut update: U, mut draw: D) -> !
 where
     B: Send,
     U: FnMut(&mut B),
@@ -24,8 +24,6 @@ where
     let ui_clone = ui.clone();
     let di = Arc::new(AtomicUsize::new(0));
     let di_clone = di.clone();
-
-    let 
 
     let handle = {
         let closure = move || {
