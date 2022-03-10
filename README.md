@@ -1,2 +1,2 @@
-# draw.rs
-a framework providing trait for drawing and updating objects
+# buf
+a library for providing multiple buffering for drawing and updating objects
