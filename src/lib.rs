@@ -17,7 +17,7 @@ pub enum Error<U, D> {
 pub fn buffer<U, D, B, R1, R2>(bufs: &mut [B], mut update: U, mut draw: D) -> Error<R1, R2>
 where
     U: FnMut(&mut B) -> Res<R1>,
-    D: FnMut(&B) -> Res<R2> + Send,
+    D: FnMut(&mut B) -> Res<R2> + Send,
     R2: Send,
 {
     let len = bufs.len();
