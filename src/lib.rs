@@ -55,7 +55,7 @@ where
                     return;
                 }
 
-                di.store(di_val + 1 % len, Ordering::SeqCst);
+                di.store((di_val + 1) % len, Ordering::SeqCst);
             }
         };
 
@@ -91,11 +91,11 @@ where
             _ => {}
         }
 
-        while ui_val + 1 % len == di.load(Ordering::SeqCst) {
+        while (ui_val + 1) % len == di.load(Ordering::SeqCst) {
             std::hint::spin_loop();
         }
 
-        ui.store(ui_val + 1 % len, Ordering::SeqCst);
+        ui.store((ui_val + 1) % len, Ordering::SeqCst);
     }
 }
 
