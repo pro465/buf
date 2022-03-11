@@ -38,12 +38,16 @@ where
             loop {
                 let di_val = di.load(Ordering::SeqCst);
 
-                while di_val == ui.load(Ordering::SeqCst) {
-                    std::hint::spin_loop();
-                }
-
                 if stop.load(Ordering::SeqCst) {
                     return;
+                }
+
+                while di_val == ui.load(Ordering::SeqCst) {
+                    if stop.load(Ordering::SeqCst) {
+                        return;
+                    }
+
+                    std::hint::spin_loop();
                 }
 
                 // SAFETY: we already waited until the main thread was done, so the only way this
