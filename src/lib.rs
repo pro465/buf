@@ -50,7 +50,7 @@ where
                 // could be acceessed simultanously is if the main thread tried to access it while
                 // we are `draw`ing, which is ruled out by the other thread checking to see if the
                 // next item its gonna modify is being accessed by us and waiting until we are done
-                if let Err(x) = (draw)(unsafe { &*bufs.add(di_val) }) {
+                if let Err(x) = (draw)(unsafe { &mut *bufs.add(di_val) }) {
                     *ret.lock().unwrap() = Some(x);
                     return;
                 }
