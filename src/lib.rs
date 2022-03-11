@@ -1,9 +1,6 @@
 use std::any::Any;
 use std::panic;
-use std::sync::{
-    atomic::{AtomicUsize, Ordering},
-    Arc,
-};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::thread::{self, JoinHandle};
 
 struct Wrapper<T: Send>(*mut T);
@@ -20,10 +17,9 @@ where
     let bufs = bufs.as_mut_ptr();
     let wrapper = Wrapper(bufs);
 
-    let ui = Arc::new(AtomicUsize::new(0));
-    let ui_clone = ui.clone();
-    let di = Arc::new(AtomicUsize::new(0));
-    let di_clone = di.clone();
+    let ui = &AtomicUsize::new(0);
+    let di = &AtomicUsize::new(0);
+    let stop = &AtomicBool::new(false);
 
     let handle = {
         let closure = move || {
@@ -32,8 +28,12 @@ where
             loop {
                 let di_val = di.load(Ordering::SeqCst);
 
-                if di_val == ui_clone.load(Ordering::SeqCst) {
-                    continue;
+                while di_val == ui.load(Ordering::SeqCst) {
+                    std::hint::spin_loop();
+                }
+
+                if stop.load(Ordering::SeqCst) {
+                    return;
                 }
 
                 (draw)(unsafe { &*bufs.add(di_val) });
@@ -56,10 +56,10 @@ where
         }));
 
         if let Err(e) = res {
-            handle_panic(e, handle);
+            handle_panic(e, handle, stop);
         }
 
-        while ui_val + 1 % len == di_clone.load(Ordering::SeqCst) {
+        while ui_val + 1 % len == di.load(Ordering::SeqCst) {
             std::hint::spin_loop();
         }
 
@@ -67,10 +67,13 @@ where
     }
 }
 
-fn handle_panic(e: Box<dyn Any + Send + 'static>, h: JoinHandle<()>) -> ! {
+fn handle_panic(e: Box<dyn Any + Send + 'static>, h: JoinHandle<()>, stop: &AtomicBool) -> ! {
+    stop.store(true, Ordering::SeqCst);
+
     #[allow(unused_must_use)]
     {
         h.join();
     }
+
     panic::resume_unwind(e);
 }
